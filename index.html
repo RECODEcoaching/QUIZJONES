@@ -70,11 +70,7 @@ body { font-family: 'Open Sauce One', system-ui, sans-serif; background: var(--b
 .strack { height: 4px; background: var(--gris-bg); border-radius: 2px; }
 .sbar { height: 100%; border-radius: 2px; width: 0; transition: width 1s ease; }
 .snote { font-size: 11px; color: var(--gris); margin-top: 12px; line-height: 1.5; }
-.fcard { background: var(--lav); border-radius: 12px; padding: 22px; margin-bottom: 14px; }
-.flbl { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--v); margin-bottom: 12px; }
-.prow { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
-.pnum { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--v); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-.ptxt { font-size: 14px; line-height: 1.6; color: var(--noir); font-weight: 600; margin: 0; }
+
 .ctacard { background: var(--gris-bg); border-radius: 12px; padding: 26px; text-align: center; }
 .ctatitle { font-size: 15px; font-weight: 800; color: var(--noir); margin-bottom: 10px; }
 .ctasub { font-size: 14px; line-height: 1.6; color: var(--gris); margin-bottom: 20px; }
@@ -119,12 +115,9 @@ body { font-family: 'Open Sauce One', system-ui, sans-serif; background: var(--b
     <div class="scard">
       <div class="stitle">Ton score par domaine</div>
       <div id="scores-rows"></div>
-      <p class="snote"><b style="color:#7C3AED">Violet</b> = maîtrisé · <b style="color:#FF9500">Orange</b> = à surveiller · <b style="color:#FF3B30">Rouge</b> = ton frein</p>
+      <p class="snote">Plus la barre est courte, plus il y a de travail à faire sur ce domaine.<br><b style="color:#7C3AED">Violet</b> = maîtrisé · <b style="color:#FF9500">Orange</b> = à surveiller · <b style="color:#FF3B30">Rouge</b> = frein principal</p>
     </div>
-    <div class="fcard">
-      <div class="flbl">👉 Par où commencer</div>
-      <div id="r-focus"></div>
-    </div>
+
     <div class="ctacard">
       <div class="line"></div>
       <div class="ctatitle">Tu veux qu'on en parle ?</div>
@@ -221,35 +214,6 @@ var PROFILES = {
   psycho:    { tag:'Profil · Mindset & rapport au corps', title:'Ce qui te bloque n\'est pas dans ta salle de sport.', desc:'Tu peux avoir le meilleur programme du monde — si le moteur tourne en mode survie, les résultats ne suivront pas. Perfectionnisme, cycle "je recommence", rapport compliqué à la nourriture ou au corps : c\'est ici que se joue ta progression réelle.' },
   hormones:  { tag:'Profil · Hormones & santé', title:'Ton corps envoie des signaux que tu n\'as pas encore appris à lire.', desc:'Cycle irrégulier, fatigue chronique, récupération difficile, SPM marqué — ces signaux ne sont pas normaux. Ils sont fréquents, mais ce n\'est pas la même chose. Aucun programme ne peut dépasser un système hormonal qui résiste.' },
   optim:     { tag:'Profil · Optimisation fine', title:'Les bases sont solides. Tu es dans la phase d\'ajustements fins.', desc:'Tu maîtrises les fondamentaux. Ce qui fait la différence maintenant, ce sont les 20% d\'optimisation que la majorité ne voit jamais : interactions entre facteurs, timing, récupération, programme adapté à ton cycle.' }
-};
-
-// Conseils par domaine — 3 niveaux selon le score (0=bon conseil, 1=moyen, 2=mauvais)
-var CONSEILS = {
-  training: [
-    'Trace ta progression : note tes charges à chaque séance pour identifier exactement où ça stagne.',
-    'Garde le même programme au moins 12 semaines avant d\'en changer.',
-    'Approche l\'échec musculaire sur la majorité de tes séries — terminer les reps ne suffit pas.'
-  ],
-  nutrition: [
-    'Calcule ton apport protéique réel — vise 1,8g à 2g/kg/jour répartis sur la journée.',
-    'Estime ta maintenance calorique pour savoir si tu es en déficit, maintenance ou surplus.',
-    'Structure tes repas de façon identique 7j/7 — la cohérence prime sur la perfection.'
-  ],
-  mindset: [
-    'Identifie le schéma qui casse ta régularité : culpabilité alimentaire, comparaison ou perfectionnisme ?',
-    'Travaille ta relation à la nourriture avant d\'optimiser la nutrition — dans cet ordre.',
-    'Pose 2 séances hebdomadaires fixes non négociables — commence petit, tiens sur la durée.'
-  ],
-  hormones: [
-    'Fais un bilan sanguin complet : fer, ferritine, vitamine D, TSH + T3/T4, bilan hormonal.',
-    'Adapte ton intensité à ton cycle : haute en phase folliculaire, récupération en phase lutéale.',
-    'Ne cherche pas à optimiser la nutrition avant d\'avoir compris ce qui se passe hormonalement.'
-  ],
-  vieperso: [
-    'Priorise le sommeil : 7h à 9h minimum — c\'est ton premier levier de récupération.',
-    'Identifie ta principale source de stress chronique et protège ton entraînement de son impact.',
-    'En période de forte charge mentale, réduis le volume plutôt que d\'arrêter complètement.'
-  ]
 };
 
 var DOM_TO_PROFILE = { training:'strategie', nutrition:'strategie', mindset:'psycho', vieperso:'psycho', hormones:'hormones' };
@@ -350,11 +314,12 @@ function showResult() {
     { key:'vieperso', lbl:'🪞 Vie perso', max:4 }
   ];
 
-  // Calcul couleurs
+  // Calcul couleurs — score élevé = mauvaise réponse = frein
+  // 0/max = parfait (violet), max/max = tout faux (rouge)
   var colors = {};
   domains.forEach(function(d){
-    var inv = 1 - res.scores[d.key] / d.max;
-    colors[d.key] = inv >= 0.7 ? 'violet' : inv >= 0.4 ? 'orange' : 'rouge';
+    var ratio = res.scores[d.key] / d.max; // 0 = parfait, 1 = tout faux
+    colors[d.key] = ratio <= 0.3 ? 'violet' : ratio <= 0.6 ? 'orange' : 'rouge';
   });
 
   // Profil
@@ -369,26 +334,6 @@ function showResult() {
   });
   document.getElementById('scores-rows').innerHTML = rowsHtml;
 
-  // Priorités dynamiques : seulement domaines rouge + orange, triés rouge en premier, max 3
-  var prios = [];
-  domains.forEach(function(d){
-    if (colors[d.key] === 'rouge' || colors[d.key] === 'orange') {
-      var ratio = res.scores[d.key] / d.max;
-      var idx = ratio >= 0.66 ? 0 : ratio >= 0.33 ? 1 : 2;
-      prios.push({ txt: CONSEILS[d.key][idx], color: colors[d.key] });
-    }
-  });
-  prios.sort(function(a,b){ return a.color === 'rouge' && b.color !== 'rouge' ? -1 : 1; });
-  var fEl = document.getElementById('r-focus');
-  fEl.innerHTML = '';
-  if (prios.length === 0) {
-    fEl.innerHTML = '<p class="ptxt">Tes bases sont solides sur tous les domaines. L\'optimisation fine passe maintenant par les interactions entre facteurs.</p>';
-  } else {
-    prios.slice(0,3).forEach(function(pr, i){
-      fEl.innerHTML += '<div class="prow"><div class="pnum">' + (i+1) + '</div><p class="ptxt">' + pr.txt + '</p></div>';
-    });
-  }
-
   // WhatsApp avec message pré-rempli
   var msg = encodeURIComponent('Bonjour Kevin, j\'ai fait le quiz RECODE. Mon profil : ' + p.tag + '. Ce qui me bloque le plus en ce moment : ');
   document.getElementById('wa-btn').href = 'https://wa.me/33677705047?text=' + msg;
@@ -399,7 +344,8 @@ function showResult() {
   // Animer les barres après show() — les éléments sont maintenant visibles
   setTimeout(function(){
     domains.forEach(function(d){
-      var inv = Math.round((1 - res.scores[d.key]/d.max)*100);
+      var ratio = res.scores[d.key] / d.max; // 0=parfait, 1=tout faux
+      var barPct = Math.round((1 - ratio) * 100); // barre longue = maîtrisé
       var bar = document.getElementById('sb-' + d.key);
       var val = document.getElementById('sv-' + d.key);
       if (!bar || !val) return;
@@ -407,7 +353,7 @@ function showResult() {
       var hex = c === 'violet' ? '#7C3AED' : c === 'orange' ? '#FF9500' : '#FF3B30';
       bar.style.background = hex;
       val.style.color = hex;
-      bar.style.width = inv + '%';
+      bar.style.width = barPct + '%';
     });
   }, 150);
 }
