@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz RECODE — Quel est ton vrai frein ?</title>
+<link href="https://fonts.cdnfonts.com/css/open-sauce-one" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --v: #7C3AED; --lav: #EDE9FE; --lav-mid: #C4B5FD;
+  --blanc: #FAFAFA; --gris-bg: #F5F5F7;
+  --noir: #1D1D1F; --gris: #6E6E73; --w: #FFFFFF;
+}
+body { font-family: 'Open Sauce One', system-ui, sans-serif; background: var(--blanc); color: var(--noir); -webkit-font-smoothing: antialiased; }
+
+.page { display: none; min-height: 100vh; }
+.page.on { display: block; }
+
+/* INTRO */
+#p-intro { display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--noir); padding: 48px 20px; text-align: center; }
+#p-intro.on { display: flex; }
+.hdl { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--lav-mid); margin-bottom: 24px; }
+.line { width: 28px; height: 3px; border-radius: 2px; background: var(--v); margin: 0 auto 20px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; background: rgba(124,58,237,.15); border: 1px solid rgba(124,58,237,.3); border-radius: 6px; padding: 4px 12px; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--lav-mid); margin-bottom: 20px; }
+.chip::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--v); flex-shrink:0; }
+#p-intro h1 { font-size: clamp(26px,5vw,44px); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; color: var(--w); max-width: 480px; margin-bottom: 14px; }
+#p-intro h1 em { color: var(--lav-mid); font-style: normal; }
+#p-intro p { font-size: 14px; line-height: 1.7; color: var(--gris); max-width: 380px; margin-bottom: 32px; }
+#p-intro p b { color: var(--w); }
+.btn-v { font-family: inherit; background: var(--v); color: var(--w); border: none; border-radius: 8px; padding: 13px 28px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.meta { margin-top: 14px; font-size: 11px; color: var(--gris); }
+
+/* QUIZ */
+#p-quiz.on { display: block; }
+.qhdr { background: var(--noir); padding: 14px 20px; position: sticky; top: 0; z-index: 10; }
+.qhdr-in { max-width: 580px; margin: 0 auto; }
+.qhdr-row { display: flex; justify-content: space-between; margin-bottom: 7px; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.qhdr-row .l { color: var(--gris); }
+.qhdr-row .r { color: var(--lav-mid); }
+.ptrack { height: 3px; background: rgba(255,255,255,.08); border-radius: 2px; }
+.pfill { height: 100%; background: var(--v); border-radius: 2px; transition: width .3s; width: 0; }
+.qbody { max-width: 580px; margin: 0 auto; padding: 36px 20px 80px; }
+.gtag { display: inline-flex; align-items: center; gap: 6px; background: var(--lav); border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--v); margin-bottom: 28px; }
+.gtag::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--v); flex-shrink:0; }
+.qblk { margin-bottom: 30px; }
+.qnum { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gris); margin-bottom: 8px; }
+.qtxt { font-size: 17px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; color: var(--noir); margin-bottom: 12px; }
+.opts { display: flex; flex-direction: column; gap: 8px; }
+.opt { font-family: inherit; display: flex; align-items: flex-start; gap: 12px; background: var(--w); border: 1.5px solid rgba(0,0,0,.08); border-radius: 10px; padding: 12px 14px; cursor: pointer; text-align: left; width: 100%; }
+.opt:hover { border-color: var(--v); }
+.opt.sel { background: var(--lav); border-color: var(--v); }
+.dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(0,0,0,.15); flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; }
+.opt.sel .dot { border-color: var(--v); background: var(--v); }
+.dot-in { width: 6px; height: 6px; border-radius: 50%; background: white; display: none; }
+.opt.sel .dot-in { display: block; }
+.otxt { font-size: 14px; line-height: 1.5; color: var(--noir); }
+.opt.sel .otxt { color: var(--v); font-weight: 600; }
+.nav { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; border-top: 1px solid rgba(0,0,0,.06); margin-top: 6px; }
+.btn-back { font-family: inherit; background: none; border: none; font-size: 14px; font-weight: 700; color: var(--gris); cursor: pointer; }
+.btn-next { font-family: inherit; background: var(--v); color: var(--w); border: none; border-radius: 8px; padding: 12px 22px; font-size: 14px; font-weight: 700; cursor: pointer; opacity: .4; transition: opacity .2s; }
+.btn-next.rdy { opacity: 1; }
+
+/* RÉSULTAT */
+#p-res.on { display: block; }
+.rinner { max-width: 580px; margin: 0 auto; padding: 52px 20px 80px; }
+.rhdl { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--gris); margin-bottom: 24px; text-align: center; }
+.rcard { background: var(--noir); border-radius: 16px; padding: 28px 24px; margin-bottom: 14px; }
+.rchip { display: inline-flex; align-items: center; gap: 6px; background: rgba(124,58,237,.2); border: 1px solid rgba(124,58,237,.4); border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--lav-mid); margin-bottom: 14px; }
+.rchip::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--v); flex-shrink:0; }
+.rtitle { font-size: clamp(18px,3vw,25px); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; color: var(--w); margin-bottom: 12px; }
+.rdesc { font-size: 14px; line-height: 1.7; color: var(--gris); }
+.scard { background: var(--w); border: 1px solid rgba(0,0,0,.07); border-radius: 12px; padding: 22px; margin-bottom: 14px; }
+.stitle { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gris); margin-bottom: 16px; }
+.srow { margin-bottom: 12px; }
+.stop { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
+.slbl { color: var(--gris); font-weight: 400; }
+.sval { color: var(--gris); font-weight: 700; }
+.strack { height: 4px; background: var(--gris-bg); border-radius: 2px; }
+.sbar { height: 100%; border-radius: 2px; width: 0; transition: width 1s .4s ease; background: var(--v); }
+.snote { font-size: 11px; color: var(--gris); margin-top: 12px; line-height: 1.5; }
+.fcard { background: var(--lav); border-radius: 12px; padding: 22px; margin-bottom: 14px; }
+.flbl { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--v); margin-bottom: 12px; }
+.prow { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+.pnum { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--v); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.ptxt { font-size: 14px; line-height: 1.6; color: var(--noir); font-weight: 600; }
+.ctacard { background: var(--gris-bg); border-radius: 12px; padding: 26px; text-align: center; }
+.ctatitle { font-size: 15px; font-weight: 800; color: var(--noir); margin-bottom: 10px; }
+.ctasub { font-size: 14px; line-height: 1.6; color: var(--gris); margin-bottom: 18px; }
+.ctabox { background: var(--noir); border-radius: 10px; padding: 16px 18px; margin-bottom: 18px; text-align: left; }
+.ctabox-lbl { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--lav-mid); margin-bottom: 8px; }
+.ctabox-txt { font-size: 14px; color: var(--w); line-height: 1.6; }
+.ctabox-txt b { color: var(--lav-mid); }
+.ctabox-sub { font-size: 12px; color: var(--gris); }
+.btn-reset { font-family: inherit; background: none; border: none; font-size: 12px; color: var(--gris); cursor: pointer; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="p-intro" class="page on">
+  <div class="hdl">@indianaafit · RECODE Coaching</div>
+  <div class="line"></div>
+  <div class="chip">Quiz · 13 questions</div>
+  <h1>Quel est <em>ton vrai frein</em> ?</h1>
+  <p>Tu scrolles, tu te sens nulle. La métaphore des Jones te détruit.<br>Ce quiz identifie <b>ton frein principal</b> — pas un jugement, une image claire.</p>
+  <button class="btn-v" onclick="goQuiz()">Commencer →</button>
+  <p class="meta">3 minutes · Résultat immédiat · Pas de formulaire</p>
+</div>
+
+<!-- QUIZ -->
+<div id="p-quiz" class="page">
+  <div class="qhdr">
+    <div class="qhdr-in">
+      <div class="qhdr-row"><span class="l">@indianaafit</span><span class="r" id="cnt">0 / 13</span></div>
+      <div class="ptrack"><div class="pfill" id="pfill"></div></div>
+    </div>
+  </div>
+  <div class="qbody" id="qbody"></div>
+</div>
+
+<!-- RÉSULTAT -->
+<div id="p-res" class="page">
+  <div class="rinner">
+    <div class="rhdl">@indianaafit · RECODE Coaching</div>
+    <div class="rcard">
+      <div class="rchip" id="r-tag"></div>
+      <div class="line" style="margin:0 0 14px"></div>
+      <div class="rtitle" id="r-title"></div>
+      <div class="rdesc" id="r-desc"></div>
+    </div>
+    <div class="scard">
+      <div class="stitle">Ton score par domaine</div>
+      <div id="scores-rows"></div>
+      <p class="snote"><b style="color:#7C3AED">Violet</b> = maîtrisé · <b style="color:#FF9500">Orange</b> = à surveiller · <b style="color:#FF3B30">Rouge</b> = ton frein</p>
+    </div>
+    <div class="fcard">
+      <div class="flbl">👉 Par où commencer</div>
+      <div id="r-focus"></div>
+    </div>
+    <div class="ctacard">
+      <div class="line"></div>
+      <div class="ctatitle">Tu veux qu'on en parle ?</div>
+      <p class="ctasub">Dis-moi sur quel profil tu es tombée.<br>Je te réponds avec une question précise sur ta situation.</p>
+      <div class="ctabox">
+        <div class="ctabox-lbl">Me contacter</div>
+        <div class="ctabox-txt">Instagram DM → <b>@indianaafit</b><br><span class="ctabox-sub">Partage ton profil + ce qui te bloque le plus en ce moment.</span></div>
+      </div>
+      <button class="btn-reset" onclick="goIntro()">↺ Refaire le quiz</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+var DATA = [
+  { grp:1, tag:'🏋️ Training', dom:'training', questions:[
+    { id:'q1', txt:'Tes charges à l\'entraînement', opts:[
+      'Mes charges progressent régulièrement, je note mes séances et je sais ce que je soulevais il y a 3 mois.',
+      'Ça progresse parfois, mais je n\'ai pas de suivi précis.',
+      'Je soulève à peu près les mêmes charges depuis plusieurs mois.'
+    ]},
+    { id:'q2', txt:'Ton programme', opts:[
+      'Je suis le même programme depuis plus de 4 mois, à la lettre, sans le modifier.',
+      'J\'ai un programme mais je le modifie souvent ou je pioche ailleurs.',
+      'J\'ai changé de programme plus de deux fois cette année.'
+    ]},
+    { id:'q3', txt:'Tes séances', opts:[
+      'Je sais ce que "proche de l\'échec" veut dire et j\'y arrive sur la majorité de mes séries.',
+      'Je travaille dur mais je ne suis pas sûre d\'aller suffisamment loin.',
+      'Je finis mes séances sans savoir si j\'ai suffisamment travaillé.'
+    ]}
+  ]},
+  { grp:2, tag:'🍽️ Nutrition', dom:'nutrition', questions:[
+    { id:'q4', txt:'Ton apport calorique', opts:[
+      'Je connais ma maintenance précisément et je sais dans quel contexte calorique je suis et pourquoi.',
+      'J\'ai une vague idée mais rien de précis.',
+      'Je mange de façon intuitive sans vraiment savoir où j\'en suis.'
+    ]},
+    { id:'q5', txt:'Tes protéines', opts:[
+      'J\'atteins 1,8g à 2g par kilo tous les jours, bien répartis sur la journée.',
+      'J\'essaie mais je n\'atteins probablement pas ce niveau de façon régulière.',
+      'Je n\'ai jamais vraiment calculé mes apports en protéines.'
+    ]},
+    { id:'q6', txt:'Ta structure alimentaire', opts:[
+      'Mon alimentation est structurée en semaine comme le weekend, en vacances comme en période de stress.',
+      'Ça tient en semaine mais le weekend ou en période de stress, tout change.',
+      'Mon alimentation est chaotique — je ne sais jamais vraiment ce que je vais manger.'
+    ]}
+  ]},
+  { grp:3, tag:'🧠 Mindset & alimentation', dom:'mindset', questions:[
+    { id:'q7', txt:'Ton rapport à la nourriture', opts:[
+      'Aucun aliment n\'est interdit, je ne culpabilise jamais après un repas.',
+      'Il m\'arrive de culpabiliser après certains repas et de vouloir compenser.',
+      'La nourriture prend beaucoup de place dans ma tête — j\'y pense souvent.'
+    ]},
+    { id:'q8', txt:'Ta régularité', opts:[
+      'Je n\'ai pas raté plus de deux semaines consécutives depuis un an, vacances incluses.',
+      'J\'ai des périodes très régulières et des périodes où je décroche.',
+      'Je reconnais le cycle "je recommence" — j\'ai redémarré plusieurs fois cette année.'
+    ]},
+    { id:'q9', txt:'Ton rapport à ton corps', opts:[
+      'Je m\'entraîne pour ce que mon corps peut faire — le miroir n\'influence pas ma journée.',
+      'Mon rapport à mon corps est compliqué — certains jours ça va, d\'autres moins.',
+      'Je m\'entraîne en grande partie parce que je ne me sens pas bien dans mon corps.'
+    ]}
+  ]},
+  { grp:4, tag:'🌀 Hormones & santé', dom:'hormones', questions:[
+    { id:'q10', txt:'Tes signaux corporels', opts:[
+      'Mon cycle est régulier, mes règles ne sont pas douloureuses, mon énergie est stable.',
+      'J\'ai quelques signaux — fatigue, cycle irrégulier, SPM marqué — mais je n\'y ai pas vraiment prêté attention.',
+      'Des signaux clairs : règles douloureuses, fatigue chronique, cycle très irrégulier ou absent.'
+    ]},
+    { id:'q11', txt:'Tes bilans de santé', opts:[
+      'Bilan sanguin complet dans les 6 derniers mois — fer, ferritine, vitamine D, thyroïde, hormones.',
+      'J\'ai fait un bilan récemment mais je ne sais pas exactement ce qui a été vérifié.',
+      'Pas de bilan depuis plus d\'un an ou jamais fait de bilan complet.'
+    ]}
+  ]},
+  { grp:5, tag:'🪞 Vie perso & contexte', dom:'vieperso', questions:[
+    { id:'q12', txt:'Ton contexte de vie', opts:[
+      'Je dors entre 7h et 9h, mon stress est bas et gérable, j\'ai de l\'énergie pour récupérer.',
+      'Mon quotidien est chargé — stress, manque de sommeil impactent parfois ma progression.',
+      'Stress chronique élevé, je dors mal et je sens que ça impacte tout le reste.'
+    ]},
+    { id:'q13', txt:'Ton histoire avec ton corps et la nourriture', opts:[
+      'Mon rapport au corps et à la nourriture est pleinement sain — aucun schéma ancien ne pèse.',
+      'Il y a des choses dans mon histoire qui influencent probablement mon rapport au corps.',
+      'Je sais qu\'il y a des blessures ou schémas anciens qui conditionnent ma relation au corps.'
+    ]}
+  ]}
+];
+
+var MAX = { training:6, nutrition:6, mindset:6, hormones:4, vieperso:4 };
+
+var PROFILES = {
+  strategie: {
+    tag:'Profil · Stratégie & méthode',
+    title:'Tu t\'entraînes dur. Mais tu navigues à vue.',
+    desc:'Ton frein principal n\'est pas le manque d\'effort — c\'est l\'absence de structure précise. Charges, calories, protéines, volume : tu travailles sans boussole. Et sans boussole, impossible de savoir si tu progresses ou si tu tournes en rond.',
+    priorities:[
+      'Poser des bases mesurables : note tes charges, trace ta progression séance par séance.',
+      'Calculer ton apport protéique — vise 1,8g à 2g/kg/jour répartis sur la journée.',
+      'Arrêter de changer de programme : 1 programme, 12 semaines minimum, exécuté à la lettre.'
+    ]
+  },
+  psycho: {
+    tag:'Profil · Mindset & rapport au corps',
+    title:'Ce qui te bloque n\'est pas dans ta salle de sport.',
+    desc:'Tu peux avoir le meilleur programme du monde — si le moteur tourne en mode survie, les résultats ne suivront pas. Perfectionnisme, cycle "je recommence", rapport compliqué à la nourriture ou au corps : c\'est ici que se joue ta progression réelle.',
+    priorities:[
+      'Identifier le schéma dominant : culpabilité alimentaire, comparaison ou régularité qui casse tout ?',
+      'Travailler la relation à la nourriture avant d\'optimiser la nutrition — dans cet ordre, pas l\'inverse.',
+      'Construire une régularité minimale non négociable : 2 séances fixes par semaine, quoi qu\'il arrive.'
+    ]
+  },
+  hormones: {
+    tag:'Profil · Hormones & santé',
+    title:'Ton corps envoie des signaux que tu n\'as pas encore appris à lire.',
+    desc:'Cycle irrégulier, fatigue chronique, récupération difficile, SPM marqué — ces signaux ne sont pas normaux. Ils sont fréquents, mais ce n\'est pas la même chose. Aucun programme ne peut dépasser un système hormonal qui résiste.',
+    priorities:[
+      'Bilan sanguin complet en priorité absolue : fer, ferritine, vitamine D, TSH + T3/T4, bilan hormonal.',
+      'Adapter l\'entraînement à ton cycle — intensité haute en phase folliculaire, récupération en phase lutéale.',
+      'Ne pas optimiser la nutrition avant d\'avoir compris ce qui se passe hormonalement.'
+    ]
+  },
+  optim: {
+    tag:'Profil · Optimisation fine',
+    title:'Les bases sont solides. Tu es dans la phase d\'ajustements fins.',
+    desc:'Tu maîtrises les fondamentaux. Ce qui fait la différence maintenant, ce sont les 20% d\'optimisation que la majorité ne voit jamais : interactions entre facteurs, timing, récupération, programme adapté à ton cycle.',
+    priorities:[
+      'Analyser les interactions entre tes domaines — ce qui bloque n\'est plus isolé, c\'est la combinaison.',
+      'Affiner le timing nutritionnel autour de tes entraînements et de ton cycle.',
+      'Optimiser la récupération : sommeil, gestion du stress, périodisation.'
+    ]
+  }
+};
+
+var DOM_TO_PROFILE = { training:'strategie', nutrition:'strategie', mindset:'psycho', vieperso:'psycho', hormones:'hormones' };
+
+// ── STATE ──
+var answers = {};
+var currentGrp = 0;
+
+// ── NAVIGATION ──
+function show(id) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('on'); });
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+function goIntro() {
+  answers = {};
+  currentGrp = 0;
+  show('p-intro');
+}
+
+function goQuiz() {
+  currentGrp = 0;
+  renderGroup();
+  show('p-quiz');
+}
+
+// ── RENDU D'UN GROUPE ──
+function renderGroup() {
+  var g = DATA[currentGrp];
+  var html = '<div class="gtag">' + g.tag + '</div>';
+
+  var offset = 0;
+  for (var i = 0; i < currentGrp; i++) offset += DATA[i].questions.length;
+
+  g.questions.forEach(function(q, qi) {
+    var num = String(offset + qi + 1).padStart(2,'0');
+    html += '<div class="qblk">';
+    html += '<div class="qnum">Question ' + num + ' / 13</div>';
+    html += '<div class="qtxt">' + q.txt + '</div>';
+    html += '<div class="opts">';
+    q.opts.forEach(function(opt, oi) {
+      var sel = answers[q.id] === oi ? ' sel' : '';
+      html += '<button class="opt' + sel + '" onclick="pick(\'' + q.id + '\',' + oi + ',this)">';
+      html += '<div class="dot"><div class="dot-in"></div></div>';
+      html += '<span class="otxt">' + opt + '</span>';
+      html += '</button>';
+    });
+    html += '</div></div>';
+  });
+
+  html += '<div class="nav">';
+  if (currentGrp === 0) {
+    html += '<span></span>';
+  } else {
+    html += '<button class="btn-back" onclick="prevGrp()">← Retour</button>';
+  }
+  var isLast = currentGrp === DATA.length - 1;
+  var btnLabel = isLast ? 'Voir mon profil →' : 'Suivant →';
+  var isRdy = isGroupDone() ? ' rdy' : '';
+  html += '<button class="btn-next' + isRdy + '" onclick="nextGrp()">' + btnLabel + '</button>';
+  html += '</div>';
+
+  document.getElementById('qbody').innerHTML = html;
+  updateProgress();
+}
+
+function isGroupDone() {
+  var g = DATA[currentGrp];
+  return g.questions.every(function(q){ return answers[q.id] !== undefined; });
+}
+
+function pick(qid, pts, btn) {
+  answers[qid] = pts;
+  // Désélectionner les autres options du même bloc
+  var block = btn.closest('.qblk');
+  block.querySelectorAll('.opt').forEach(function(o){ o.classList.remove('sel'); });
+  block.querySelectorAll('.otxt').forEach(function(o){ o.style.color=''; o.style.fontWeight=''; });
+  btn.classList.add('sel');
+  // Mettre à jour le bouton next
+  if (isGroupDone()) {
+    var nb = document.querySelector('.btn-next');
+    if (nb) nb.classList.add('rdy');
+  }
+  updateProgress();
+}
+
+function nextGrp() {
+  if (!isGroupDone()) {
+    // Signaler visuellement les questions sans réponse
+    var g = DATA[currentGrp];
+    g.questions.forEach(function(q){
+      if (answers[q.id] === undefined) {
+        var blocks = document.querySelectorAll('.qblk');
+        blocks.forEach(function(b){
+          if (b.querySelector('.qtxt') && b.querySelector('.qtxt').textContent === q.txt) {
+            b.style.outline = '2px solid #FF3B30';
+            b.style.borderRadius = '8px';
+            setTimeout(function(){ b.style.outline = ''; }, 2000);
+          }
+        });
+      }
+    });
+    return;
+  }
+  if (currentGrp < DATA.length - 1) {
+    currentGrp++;
+    renderGroup();
+    window.scrollTo(0,0);
+  } else {
+    showResult();
+  }
+}
+
+function prevGrp() {
+  if (currentGrp > 0) {
+    currentGrp--;
+    renderGroup();
+    window.scrollTo(0,0);
+  }
+}
+
+function updateProgress() {
+  var n = Object.keys(answers).length;
+  document.getElementById('cnt').textContent = n + ' / 13';
+  document.getElementById('pfill').style.width = (n/13*100) + '%';
+}
+
+// ── CALCUL PROFIL ──
+function computeProfile() {
+  var s = { training:0, nutrition:0, mindset:0, hormones:0, vieperso:0 };
+  DATA.forEach(function(g){
+    g.questions.forEach(function(q){ s[g.dom] += (answers[q.id] || 0); });
+  });
+  var total = Object.values(s).reduce(function(a,b){ return a+b; }, 0);
+  if (total <= 6) return { scores:s, key:'optim' };
+  var norm = {};
+  Object.keys(s).forEach(function(d){ norm[d] = s[d] / MAX[d]; });
+  var top = 'training', topR = 0;
+  Object.keys(norm).forEach(function(d){ if (norm[d] > topR) { topR = norm[d]; top = d; } });
+  return { scores:s, key: DOM_TO_PROFILE[top] };
+}
+
+// ── AFFICHAGE RÉSULTAT ──
+function showResult() {
+  var res = computeProfile();
+  var p = PROFILES[res.key];
+
+  document.getElementById('r-tag').textContent = p.tag;
+  document.getElementById('r-title').textContent = p.title;
+  document.getElementById('r-desc').textContent = p.desc;
+
+  // Priorités
+  var fEl = document.getElementById('r-focus');
+  fEl.innerHTML = '';
+  p.priorities.forEach(function(txt, i) {
+    fEl.innerHTML += '<div class="prow"><div class="pnum">'+(i+1)+'</div><p class="ptxt">'+txt+'</p></div>';
+  });
+
+  // Scores
+  var domains = [
+    { key:'training', lbl:'🏋️ Training', max:6 },
+    { key:'nutrition', lbl:'🍽️ Nutrition', max:6 },
+    { key:'mindset', lbl:'🧠 Mindset', max:6 },
+    { key:'hormones', lbl:'🌀 Hormones', max:4 },
+    { key:'vieperso', lbl:'🪞 Vie perso', max:4 }
+  ];
+  var rowsHtml = '';
+  domains.forEach(function(d){
+    rowsHtml += '<div class="srow"><div class="stop"><span class="slbl">'+d.lbl+'</span><span class="sval" id="sv-'+d.key+'">'+res.scores[d.key]+'/'+d.max+'</span></div><div class="strack"><div class="sbar" id="sb-'+d.key+'"></div></div></div>';
+  });
+  document.getElementById('scores-rows').innerHTML = rowsHtml;
+
+  show('p-res');
+
+  // Animer les barres après rendu
+  setTimeout(function(){
+    domains.forEach(function(d){
+      var s = res.scores[d.key];
+      var invPct = Math.round((1 - s/d.max)*100);
+      var bar = document.getElementById('sb-'+d.key);
+      var val = document.getElementById('sv-'+d.key);
+      if (!bar) return;
+      if (invPct >= 70) { bar.style.background='#7C3AED'; val.style.color='#7C3AED'; }
+      else if (invPct >= 40) { bar.style.background='#FF9500'; val.style.color='#FF9500'; }
+      else { bar.style.background='#FF3B30'; val.style.color='#FF3B30'; }
+      bar.style.width = invPct + '%';
+    });
+  }, 100);
+}
+</script>
+</body>
+</html>
